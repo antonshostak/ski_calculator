@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Custom scrollbar for history and modal */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -41,7 +40,7 @@
 
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Calculator Form (8 Columns on Large Screens) -->
+        <!-- Calculator Form (8 Columns) -->
         <section class="lg:col-span-8 bg-white rounded-3xl shadow-sm border border-slate-200/80 p-5 md:p-7 flex flex-col justify-between">
             <div>
                 <!-- Form Header -->
@@ -207,7 +206,7 @@
             </div>
         </section>
 
-        <!-- History & Compare Sidebar (4 Columns on Large Screens) -->
+        <!-- History & Compare Sidebar -->
         <aside class="lg:col-span-4 bg-white rounded-3xl shadow-sm border border-slate-200/80 p-5 md:p-6 flex flex-col justify-between">
             <div>
                 <div class="flex justify-between items-center mb-3">
@@ -221,7 +220,6 @@
                     Click any banner to load trip details into the editor. Select 2 or more checkboxes to compare side-by-side.
                 </p>
                 
-                <!-- Saved items container -->
                 <div id="history-list" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                     <div class="text-center py-12 text-slate-400 text-xs border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center gap-2">
                         <span class="text-2xl opacity-60">🏔️</span>
@@ -240,7 +238,6 @@
 
     </main>
 
-    <!-- Comparison Modal -->
     <div id="compare-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50 transition-all duration-200">
         <div class="bg-white rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 flex flex-col transform transition-all">
             <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 sticky top-0 z-10">
@@ -253,9 +250,7 @@
                 </div>
                 <button id="close-modal-btn" type="button" class="text-slate-400 hover:text-slate-700 text-lg font-bold w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm transition">✕</button>
             </div>
-            <div id="comparison-content" class="p-6 overflow-x-auto overflow-y-auto">
-                <!-- Dynamic comparison table inserted here -->
-            </div>
+            <div id="comparison-content" class="p-6 overflow-x-auto overflow-y-auto"></div>
         </div>
     </div>
 
@@ -268,7 +263,7 @@
     <script>
         const STORAGE_KEY = 'alpine_budget_history_v3';
 
-        // Form DOM Elements
+        // DOM Element Declarations
         const resortNameInput = document.getElementById('resort-name');
         const startDateInput = document.getElementById('start-date');
         const endDateInput = document.getElementById('end-date');
@@ -280,49 +275,91 @@
         const skirentPriceInput = document.getElementById('skirent-price');
         const insurancePriceInput = document.getElementById('insurance-price');
 
-        // Output Display Elements
-        const grandTotalEl = document.getElementById('grand-total');
-        const perPersonTotalEl = document.getElementById('per-person-total');
-        const hotelPerPersonEl = document.getElementById('hotel-per-person');
-        const durationText = document.getElementById('duration-text');
         const formTitle = document.getElementById('form-title');
-        const costShareLabel = document.getElementById('cost-share-label');
-
-        // Expense Hints
+        const durationBadge = document.getElementById('duration-badge');
+        const durationText = document.getElementById('duration-text');
+        const hotelPerPersonEl = document.getElementById('hotel-per-person');
         const flightTotalHint = document.getElementById('flight-total-hint');
         const transportPerPersonHint = document.getElementById('transport-per-person-hint');
         const skipassTotalHint = document.getElementById('skipass-total-hint');
         const skirentTotalHint = document.getElementById('skirent-total-hint');
         const insuranceTotalHint = document.getElementById('insurance-total-hint');
 
-        // Action Buttons & UI Containers
+        const grandTotalEl = document.getElementById('grand-total');
+        const perPersonTotalEl = document.getElementById('per-person-total');
+        const costShareLabel = document.getElementById('cost-share-label');
+
         const saveBtn = document.getElementById('save-calc-btn');
         const newCalcBtn = document.getElementById('new-calc-btn');
-        const historyListEl = document.getElementById('history-list');
-        const savedCountEl = document.getElementById('saved-count');
         const compareBtn = document.getElementById('compare-btn');
+
+        const savedCountEl = document.getElementById('saved-count');
+        const historyListEl = document.getElementById('history-list');
 
         const compareModal = document.getElementById('compare-modal');
         const closeModalBtn = document.getElementById('close-modal-btn');
         const comparisonContent = document.getElementById('comparison-content');
+
         const toast = document.getElementById('toast');
         const toastMsg = document.getElementById('toast-msg');
         const toastIcon = document.getElementById('toast-icon');
 
-        // Default initial dates setup
-        const today = new Date();
-        const defaultStart = new Date(today);
-        defaultStart.setDate(today.getDate() + 14);
-        const defaultEnd = new Date(defaultStart);
-        defaultEnd.setDate(defaultStart.getDate() + 7);
-        
-        startDateInput.value = defaultStart.toISOString().split('T')[0];
-        endDateInput.value = defaultEnd.toISOString().split('T')[0];
+        // Helper function to add days to a date string YYYY-MM-DD
+        function addDays(dateStr, days) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '';
+            d.setDate(d.getDate() + days);
+            return d.toISOString().split('T')[0];
+        }
+
+        // Update minimum allowed end date (Start Date + 1 day)
+        function updateEndDateConstraints() {
+            if (startDateInput.value) {
+                const minEnd = addDays(startDateInput.value, 1);
+                endDateInput.min = minEnd;
+            }
+        }
+
+        // Set default dates on load (Today + 14 days start, + 7 days end)
+        function setInitialDefaultDates() {
+            const today = new Date();
+            const defaultStart = new Date(today);
+            defaultStart.setDate(today.getDate() + 14);
+            const defaultEnd = new Date(defaultStart);
+            defaultEnd.setDate(defaultStart.getDate() + 7);
+            
+            startDateInput.value = defaultStart.toISOString().split('T')[0];
+            endDateInput.value = defaultEnd.toISOString().split('T')[0];
+            updateEndDateConstraints();
+        }
+
+        // Event listener: On start date change -> End Date becomes Start Date + 7 days, min = Start Date + 1
+        startDateInput.addEventListener('change', () => {
+            if (startDateInput.value) {
+                const minEnd = addDays(startDateInput.value, 1);
+                const defaultEndStr = addDays(startDateInput.value, 7);
+                
+                endDateInput.min = minEnd;
+                endDateInput.value = defaultEndStr;
+                calculate();
+            }
+        });
+
+        // Event listener: On end date change -> enforce minimum date constraint
+        endDateInput.addEventListener('change', () => {
+            if (startDateInput.value && endDateInput.value) {
+                const minEnd = addDays(startDateInput.value, 1);
+                if (endDateInput.value < minEnd) {
+                    endDateInput.value = minEnd;
+                }
+                calculate();
+            }
+        });
 
         function calculate() {
             const persons = Math.max(1, parseInt(personsInput.value) || 1);
             
-            // Raw Inputs
             const hotelTotal = Math.max(0, parseFloat(hotelPriceInput.value) || 0);
             const flightPerPerson = Math.max(0, parseFloat(flightPriceInput.value) || 0);
             const transportTotal = Math.max(0, parseFloat(transportPriceInput.value) || 0);
@@ -330,7 +367,6 @@
             const skirentPerPerson = Math.max(0, parseFloat(skirentPriceInput.value) || 0);
             const insurancePerPerson = Math.max(0, parseFloat(insurancePriceInput.value) || 0);
 
-            // Calculations
             const hotelPerPerson = hotelTotal / persons;
             const transportPerPerson = transportTotal / persons;
             
@@ -342,7 +378,7 @@
             const grandTotal = hotelTotal + totalFlight + transportTotal + totalSkiPass + totalSkiRent + totalInsurance;
             const grandTotalPerPerson = grandTotal / persons;
 
-            // Update UI Labels & Hints
+            // Update UI
             hotelPerPersonEl.textContent = `$${Math.round(hotelPerPerson).toLocaleString()}`;
             flightTotalHint.textContent = `$${Math.round(totalFlight).toLocaleString()} total group`;
             transportPerPersonHint.textContent = `$${Math.round(transportPerPerson).toLocaleString()} / person`;
@@ -353,7 +389,7 @@
             grandTotalEl.textContent = `$${Math.round(grandTotal).toLocaleString()}`;
             perPersonTotalEl.textContent = `$${Math.round(grandTotalPerPerson).toLocaleString()}`;
 
-            // Calculate Duration
+            // Calculate duration in nights
             let daysCount = 0;
             if (startDateInput.value && endDateInput.value) {
                 const start = new Date(startDateInput.value);
@@ -367,11 +403,10 @@
                 }
             }
 
-            // Update Form Title
             const resortName = resortNameInput.value.trim() || 'Ski Resort';
             formTitle.textContent = resortName;
 
-            // Visual Breakdown Bar Percentages
+            // Visual breakdown bar
             if (grandTotal > 0) {
                 const pHotel = (hotelTotal / grandTotal) * 100;
                 const pFlight = (totalFlight / grandTotal) * 100;
@@ -480,13 +515,9 @@
 
         saveBtn.addEventListener('click', () => {
             const currentData = calculate();
-            
-            // Always assign a new timestamp ID so every click saves as a distinct banner
             currentData.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
 
             let history = getHistory();
-
-            // Maintain max 5 saved items (remove oldest if capacity reached)
             if (history.length >= 5) {
                 history.pop();
             }
@@ -506,6 +537,7 @@
             endMonth.setDate(nextMonth.getDate() + 7);
 
             startDateInput.value = nextMonth.toISOString().split('T')[0];
+            updateEndDateConstraints();
             endDateInput.value = endMonth.toISOString().split('T')[0];
             
             personsInput.value = 4;
@@ -527,6 +559,7 @@
 
             resortNameInput.value = item.resort || 'Ski Trip';
             startDateInput.value = item.startDate || '';
+            updateEndDateConstraints();
             endDateInput.value = item.endDate || '';
             personsInput.value = item.persons || 1;
             hotelPriceInput.value = item.hotelTotal || 0;
@@ -572,7 +605,6 @@
 
             if (selectedItems.length < 2) return;
 
-            // Find lowest per-person price to highlight as best deal
             let minPerPerson = Infinity;
             selectedItems.forEach(item => {
                 if (item.grandTotalPerPerson < minPerPerson) {
@@ -580,7 +612,6 @@
                 }
             });
 
-            // Build comparison table HTML
             let html = `
                 <table class="w-full border-collapse text-left text-sm min-w-[600px]">
                     <thead>
@@ -668,11 +699,11 @@
             }
         });
 
-        // Helper function to escape user HTML string inputs
         function escapeHtml(str) {
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
+        setInitialDefaultDates();
         calculate();
         renderHistory();
     </script>
