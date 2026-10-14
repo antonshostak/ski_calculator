@@ -122,7 +122,7 @@
                                 <span>⚡ Default Per-Person Standard Rates</span>
                                 <span class="text-[10px] text-slate-400 font-normal">Applies to all travelers unless customized below</span>
                             </h3>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
                                 <div class="bg-white p-2.5 rounded-xl border border-slate-200/80">
                                     <label for="flight-price" class="block text-[11px] font-bold text-slate-600 mb-1">✈️ Flight ($)</label>
                                     <input type="number" id="flight-price" min="0" value="400" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 transition">
@@ -136,8 +136,16 @@
                                     <input type="number" id="skirent-price" min="0" value="180" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 transition">
                                 </div>
                                 <div class="bg-white p-2.5 rounded-xl border border-slate-200/80">
+                                    <label for="lessons-price" class="block text-[11px] font-bold text-slate-600 mb-1">🎓 Lessons ($)</label>
+                                    <input type="number" id="lessons-price" min="0" value="150" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 transition">
+                                </div>
+                                <div class="bg-white p-2.5 rounded-xl border border-slate-200/80">
                                     <label for="insurance-price" class="block text-[11px] font-bold text-slate-600 mb-1">🛡️ Insurance ($)</label>
                                     <input type="number" id="insurance-price" min="0" value="60" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 transition">
+                                </div>
+                                <div class="bg-white p-2.5 rounded-xl border border-slate-200/80">
+                                    <label for="additional-price" class="block text-[11px] font-bold text-slate-600 mb-1">🏷️ Extra ($)</label>
+                                    <input type="number" id="additional-price" min="0" value="100" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 transition">
                                 </div>
                             </div>
                         </div>
@@ -160,12 +168,14 @@
                         <span id="cost-share-label" class="text-slate-400 font-normal">Hotel 35% • Ski Pass 20% • Flights 23%</span>
                     </div>
                     <div id="cost-bar-container" class="h-3 w-full bg-slate-200 rounded-full overflow-hidden flex gap-0.5">
-                        <div id="bar-hotel" class="bg-indigo-600 h-full transition-all duration-300" style="width: 35%" title="Hotel"></div>
-                        <div id="bar-flight" class="bg-sky-500 h-full transition-all duration-300" style="width: 25%" title="Flights"></div>
-                        <div id="bar-skipass" class="bg-emerald-500 h-full transition-all duration-300" style="width: 20%" title="Ski Pass"></div>
+                        <div id="bar-hotel" class="bg-indigo-600 h-full transition-all duration-300" style="width: 30%" title="Hotel"></div>
+                        <div id="bar-flight" class="bg-sky-500 h-full transition-all duration-300" style="width: 20%" title="Flights"></div>
+                        <div id="bar-skipass" class="bg-emerald-500 h-full transition-all duration-300" style="width: 15%" title="Ski Pass"></div>
                         <div id="bar-skirent" class="bg-amber-500 h-full transition-all duration-300" style="width: 10%" title="Ski Rent"></div>
-                        <div id="bar-transport" class="bg-purple-500 h-full transition-all duration-300" style="width: 6%" title="Transport"></div>
-                        <div id="bar-insurance" class="bg-rose-500 h-full transition-all duration-300" style="width: 4%" title="Insurance"></div>
+                        <div id="bar-lessons" class="bg-teal-500 h-full transition-all duration-300" style="width: 8%" title="Ski Lessons"></div>
+                        <div id="bar-transport" class="bg-purple-500 h-full transition-all duration-300" style="width: 7%" title="Transport"></div>
+                        <div id="bar-insurance" class="bg-rose-500 h-full transition-all duration-300" style="width: 5%" title="Insurance"></div>
+                        <div id="bar-additional" class="bg-fuchsia-500 h-full transition-all duration-300" style="width: 5%" title="Additional Charges"></div>
                     </div>
                 </div>
             </div>
@@ -261,8 +271,9 @@
         const skipassTotalHint = document.getElementById('skipass-total-hint');
         const skirentPriceInput = document.getElementById('skirent-price');
         const skirentTotalHint = document.getElementById('skirent-total-hint');
+        const lessonsPriceInput = document.getElementById('lessons-price');
         const insurancePriceInput = document.getElementById('insurance-price');
-        const insuranceTotalHint = document.getElementById('insurance-total-hint');
+        const additionalPriceInput = document.getElementById('additional-price');
         const personsBreakdownContainer = document.getElementById('persons-breakdown-container');
         const grandTotalEl = document.getElementById('grand-total');
         const perPersonTotalEl = document.getElementById('per-person-total');
@@ -330,7 +341,9 @@
                         flight: null,
                         skipass: null,
                         skirent: null,
+                        lessons: null,
                         insurance: null,
+                        additional: null,
                         editingName: false
                     });
                 }
@@ -348,7 +361,9 @@
             const defaultFlight = Math.max(0, parseFloat(flightPriceInput.value) || 0);
             const defaultPass = Math.max(0, parseFloat(skipassPriceInput.value) || 0);
             const defaultRent = Math.max(0, parseFloat(skirentPriceInput.value) || 0);
+            const defaultLessons = Math.max(0, parseFloat(lessonsPriceInput.value) || 0);
             const defaultIns = Math.max(0, parseFloat(insurancePriceInput.value) || 0);
+            const defaultAdd = Math.max(0, parseFloat(additionalPriceInput.value) || 0);
 
             const hotelShare = hotelTotal / personsCount;
             const transportShare = transportTotal / personsCount;
@@ -357,9 +372,11 @@
                 const flightVal = p.flight !== null && p.flight !== undefined ? p.flight : defaultFlight;
                 const passVal = p.skipass !== null && p.skipass !== undefined ? p.skipass : defaultPass;
                 const rentVal = p.skirent !== null && p.skirent !== undefined ? p.skirent : defaultRent;
+                const lessonsVal = p.lessons !== null && p.lessons !== undefined ? p.lessons : defaultLessons;
                 const insVal = p.insurance !== null && p.insurance !== undefined ? p.insurance : defaultIns;
+                const addVal = p.additional !== null && p.additional !== undefined ? p.additional : defaultAdd;
 
-                const personTotal = hotelShare + transportShare + flightVal + passVal + rentVal + insVal;
+                const personTotal = hotelShare + transportShare + flightVal + passVal + rentVal + lessonsVal + insVal + addVal;
 
                 return `
                     <div class="bg-white border ${p.expanded ? 'border-sky-300 ring-2 ring-sky-100' : 'border-slate-200'} rounded-xl transition shadow-sm overflow-hidden">
@@ -391,7 +408,7 @@
 
                         <!-- Expandable Details Panel -->
                         ${p.expanded ? `
-                            <div class="p-3.5 bg-slate-50/50 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                            <div class="p-3.5 bg-slate-50/50 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                                 <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
                                     <span class="text-[10px] text-slate-400 uppercase font-bold block">🏨 Hotel Share</span>
                                     <span class="text-sm font-bold text-slate-700">$${Math.round(hotelShare).toLocaleString()}</span>
@@ -426,10 +443,26 @@
                                 </div>
 
                                 <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                                    <label class="text-[10px] text-sky-600 uppercase font-bold block mb-1">🎓 Lessons</label>
+                                    <div class="relative">
+                                        <span class="absolute left-2 top-1 text-slate-400 font-bold">$</span>
+                                        <input type="number" min="0" value="${lessonsVal}" onchange="updatePersonExpense('${p.id}', 'lessons', this.value)" class="w-full pl-5 pr-1 py-1 bg-slate-50 border border-slate-200 rounded text-xs font-semibold">
+                                    </div>
+                                </div>
+
+                                <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
                                     <label class="text-[10px] text-sky-600 uppercase font-bold block mb-1">🛡️ Insurance</label>
                                     <div class="relative">
                                         <span class="absolute left-2 top-1 text-slate-400 font-bold">$</span>
                                         <input type="number" min="0" value="${insVal}" onchange="updatePersonExpense('${p.id}', 'insurance', this.value)" class="w-full pl-5 pr-1 py-1 bg-slate-50 border border-slate-200 rounded text-xs font-semibold">
+                                    </div>
+                                </div>
+
+                                <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                                    <label class="text-[10px] text-sky-600 uppercase font-bold block mb-1">🏷️ Extra</label>
+                                    <div class="relative">
+                                        <span class="absolute left-2 top-1 text-slate-400 font-bold">$</span>
+                                        <input type="number" min="0" value="${addVal}" onchange="updatePersonExpense('${p.id}', 'additional', this.value)" class="w-full pl-5 pr-1 py-1 bg-slate-50 border border-slate-200 rounded text-xs font-semibold">
                                     </div>
                                 </div>
                             </div>
@@ -487,7 +520,9 @@
             const transportTotal = Math.max(0, parseFloat(transportPriceInput.value) || 0);
             const skipassPerPerson = Math.max(0, parseFloat(skipassPriceInput.value) || 0);
             const skirentPerPerson = Math.max(0, parseFloat(skirentPriceInput.value) || 0);
+            const lessonsPerPerson = Math.max(0, parseFloat(lessonsPriceInput?.value) || 0);
             const insurancePerPerson = Math.max(0, parseFloat(insurancePriceInput.value) || 0);
+            const additionalPerPerson = Math.max(0, parseFloat(additionalPriceInput?.value) || 0);
 
             const hotelPerPerson = hotelTotal / persons;
             const transportPerPerson = transportTotal / persons;
@@ -495,16 +530,20 @@
             let totalFlight = 0;
             let totalSkiPass = 0;
             let totalSkiRent = 0;
+            let totalLessons = 0;
             let totalInsurance = 0;
+            let totalAdditional = 0;
 
             personsData.forEach(p => {
                 totalFlight += (p.flight !== null && p.flight !== undefined ? p.flight : flightPerPerson);
                 totalSkiPass += (p.skipass !== null && p.skipass !== undefined ? p.skipass : skipassPerPerson);
                 totalSkiRent += (p.skirent !== null && p.skirent !== undefined ? p.skirent : skirentPerPerson);
+                totalLessons += (p.lessons !== null && p.lessons !== undefined ? p.lessons : lessonsPerPerson);
                 totalInsurance += (p.insurance !== null && p.insurance !== undefined ? p.insurance : insurancePerPerson);
+                totalAdditional += (p.additional !== null && p.additional !== undefined ? p.additional : additionalPerPerson);
             });
 
-            const grandTotal = hotelTotal + totalFlight + transportTotal + totalSkiPass + totalSkiRent + totalInsurance;
+            const grandTotal = hotelTotal + totalFlight + transportTotal + totalSkiPass + totalSkiRent + totalLessons + totalInsurance + totalAdditional;
             const grandTotalPerPerson = grandTotal / persons;
 
             // Update UI elements
@@ -513,7 +552,6 @@
             if (transportPerPersonHint) transportPerPersonHint.textContent = `$${Math.round(transportPerPerson).toLocaleString()} / person`;
             if (skipassTotalHint) skipassTotalHint.textContent = `$${Math.round(totalSkiPass).toLocaleString()} total group`;
             if (skirentTotalHint) skirentTotalHint.textContent = `$${Math.round(totalSkiRent).toLocaleString()} total group`;
-            if (insuranceTotalHint) insuranceTotalHint.textContent = `$${Math.round(totalInsurance).toLocaleString()} total group`;
 
             if (grandTotalEl) grandTotalEl.textContent = `$${Math.round(grandTotal).toLocaleString()}`;
             if (perPersonTotalEl) perPersonTotalEl.textContent = `$${Math.round(grandTotalPerPerson).toLocaleString()}`;
@@ -541,25 +579,31 @@
                 const pFlight = (totalFlight / grandTotal) * 100;
                 const pSkiPass = (totalSkiPass / grandTotal) * 100;
                 const pSkiRent = (totalSkiRent / grandTotal) * 100;
+                const pLessons = (totalLessons / grandTotal) * 100;
                 const pTransport = (transportTotal / grandTotal) * 100;
                 const pInsurance = (totalInsurance / grandTotal) * 100;
+                const pAdditional = (totalAdditional / grandTotal) * 100;
 
                 const bh = document.getElementById('bar-hotel');
                 const bf = document.getElementById('bar-flight');
                 const bp = document.getElementById('bar-skipass');
                 const br = document.getElementById('bar-skirent');
+                const bl = document.getElementById('bar-lessons');
                 const bt = document.getElementById('bar-transport');
                 const bi = document.getElementById('bar-insurance');
+                const ba = document.getElementById('bar-additional');
 
                 if (bh) bh.style.width = `${pHotel}%`;
                 if (bf) bf.style.width = `${pFlight}%`;
                 if (bp) bp.style.width = `${pSkiPass}%`;
                 if (br) br.style.width = `${pSkiRent}%`;
+                if (bl) bl.style.width = `${pLessons}%`;
                 if (bt) bt.style.width = `${pTransport}%`;
                 if (bi) bi.style.width = `${pInsurance}%`;
+                if (ba) ba.style.width = `${pAdditional}%`;
 
                 if (costShareLabel) {
-                    costShareLabel.textContent = `Hotel ${Math.round(pHotel)}% • Flight ${Math.round(pFlight)}% • Ski Pass ${Math.round(pSkiPass)}%`;
+                    costShareLabel.textContent = `Hotel ${Math.round(pHotel)}% • Flight ${Math.round(pFlight)}% • Ski Pass ${Math.round(pSkiPass)}% • Lessons ${Math.round(pLessons)}%`;
                 }
             }
 
@@ -580,8 +624,12 @@
                 totalSkiPass,
                 skirentPerPerson,
                 totalSkiRent,
+                lessonsPerPerson,
+                totalLessons,
                 insurancePerPerson,
                 totalInsurance,
+                additionalPerPerson,
+                totalAdditional,
                 grandTotal,
                 grandTotalPerPerson
             };
@@ -596,7 +644,8 @@
         [
             resortNameInput, endDateInput, personsInput,
             hotelPriceInput, flightPriceInput, transportPriceInput,
-            skipassPriceInput, skirentPriceInput, insurancePriceInput
+            skipassPriceInput, skirentPriceInput, lessonsPriceInput,
+            insurancePriceInput, additionalPriceInput
         ].forEach(el => {
             if (el) el.addEventListener('input', calculate);
         });
@@ -698,11 +747,13 @@
             transportPriceInput.value = 300;
             skipassPriceInput.value = 380;
             skirentPriceInput.value = 160;
+            if (lessonsPriceInput) lessonsPriceInput.value = 150;
             insurancePriceInput.value = 55;
+            if (additionalPriceInput) additionalPriceInput.value = 100;
 
             personsData = [
-                { id: 'person_1', name: 'Alex', expanded: false, flight: null, skipass: null, skirent: null, insurance: null },
-                { id: 'person_2', name: 'Taylor', expanded: false, flight: null, skipass: null, skirent: null, insurance: null }
+                { id: 'person_1', name: 'Alex', expanded: false, flight: null, skipass: null, skirent: null, lessons: null, insurance: null, additional: null },
+                { id: 'person_2', name: 'Taylor', expanded: false, flight: null, skipass: null, skirent: null, lessons: null, insurance: null, additional: null }
             ];
 
             calculate();
@@ -724,7 +775,9 @@
             transportPriceInput.value = item.transportTotal !== undefined ? item.transportTotal : (item.transport || 0);
             skipassPriceInput.value = item.skipassPerPerson !== undefined ? item.skipassPerPerson : (item.skipass || 0);
             skirentPriceInput.value = item.skirentPerPerson !== undefined ? item.skirentPerPerson : (item.skirent || 0);
+            if (lessonsPriceInput) lessonsPriceInput.value = item.lessonsPerPerson !== undefined ? item.lessonsPerPerson : 0;
             insurancePriceInput.value = item.insurancePerPerson !== undefined ? item.insurancePerPerson : (item.insurance || 0);
+            if (additionalPriceInput) additionalPriceInput.value = item.additionalPerPerson !== undefined ? item.additionalPerPerson : 0;
 
             if (item.personsData && Array.isArray(item.personsData)) {
                 personsData = JSON.parse(JSON.stringify(item.personsData));
@@ -770,23 +823,31 @@
                         </tr>
                         <tr>
                             <td class="py-3 px-4 font-bold text-slate-700">✈️ Flight Total (Per Person)</td>
-                            ${trips.map(t => `<td class="py-3 px-4 text-slate-600">$${Math.round(t.totalFlight).toLocaleString()} <span class="text-xs text-slate-400">($${Math.round(t.flightPerPerson)}/p)</span></td>`).join('')}
+                            ${trips.map(t => `<td class="py-3 px-4 text-slate-600">$${Math.round(t.totalFlight || 0).toLocaleString()} <span class="text-xs text-slate-400">($${Math.round(t.flightPerPerson || 0)}/p)</span></td>`).join('')}
                         </tr>
                         <tr>
                             <td class="py-3 px-4 font-bold text-slate-700">🚗 Transport Total (Per Person)</td>
-                            ${trips.map(t => `<td class="py-3 px-4 text-slate-600">$${Math.round(t.transportTotal).toLocaleString()} <span class="text-xs text-slate-400">($${Math.round(t.transportPerPerson)}/p)</span></td>`).join('')}
+                            ${trips.map(t => `<td class="py-3 px-4 text-slate-600">$${Math.round(t.transportTotal || 0).toLocaleString()} <span class="text-xs text-slate-400">($${Math.round(t.transportPerPerson || 0)}/p)</span></td>`).join('')}
                         </tr>
                         <tr>
                             <td class="py-3 px-4 font-bold text-slate-700">🎟️ Ski Pass Total (Per Person)</td>
-                            ${trips.map(t => `<td class="py-3 px-4 text-slate-600">$${Math.round(t.totalSkiPass).toLocaleString()} <span class="text-xs text-slate-400">($${Math.round(t.skipassPerPerson)}/p)</span></td>`).join('')}
+                            ${trips.map(t => `<td class="py-3 px-4 text-slate-600">$${Math.round(t.totalSkiPass || 0).toLocaleString()} <span class="text-xs text-slate-400">($${Math.round(t.skipassPerPerson || 0)}/p)</span></td>`).join('')}
                         </tr>
                         <tr>
                             <td class="py-3 px-4 font-bold text-slate-700">🎿 Ski Rent Total (Per Person)</td>
-                            ${trips.map(t => `<td class="py-3 px-4 text-slate-600">$${Math.round(t.totalSkiRent).toLocaleString()} <span class="text-xs text-slate-400">($${Math.round(t.skirentPerPerson)}/p)</span></td>`).join('')}
+                            ${trips.map(t => `<td class="py-3 px-4 text-slate-600">$${Math.round(t.totalSkiRent || 0).toLocaleString()} <span class="text-xs text-slate-400">($${Math.round(t.skirentPerPerson || 0)}/p)</span></td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-bold text-slate-700">🎓 Lessons Total (Per Person)</td>
+                            ${trips.map(t => `<td class="py-3 px-4 text-slate-600">$${Math.round(t.totalLessons || 0).toLocaleString()} <span class="text-xs text-slate-400">($${Math.round(t.lessonsPerPerson || 0)}/p)</span></td>`).join('')}
                         </tr>
                         <tr>
                             <td class="py-3 px-4 font-bold text-slate-700">🛡️ Insurance Total (Per Person)</td>
-                            ${trips.map(t => `<td class="py-3 px-4 text-slate-600">$${Math.round(t.totalInsurance).toLocaleString()} <span class="text-xs text-slate-400">($${Math.round(t.insurancePerPerson)}/p)</span></td>`).join('')}
+                            ${trips.map(t => `<td class="py-3 px-4 text-slate-600">$${Math.round(t.totalInsurance || 0).toLocaleString()} <span class="text-xs text-slate-400">($${Math.round(t.insurancePerPerson || 0)}/p)</span></td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-bold text-slate-700">🏷️ Additional Charges (Per Person)</td>
+                            ${trips.map(t => `<td class="py-3 px-4 text-slate-600">$${Math.round(t.totalAdditional || 0).toLocaleString()} <span class="text-xs text-slate-400">($${Math.round(t.additionalPerPerson || 0)}/p)</span></td>`).join('')}
                         </tr>
                         <tr class="bg-slate-50/80 font-black text-base border-t-2 border-slate-200">
                             <td class="py-4 px-4 text-slate-900">Grand Total</td>
