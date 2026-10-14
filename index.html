@@ -206,10 +206,10 @@
                         <span>📜</span>
                         <span>Saved Trips</span>
                     </h3>
-                    <span id="saved-count" class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-bold border border-slate-200">0 / 5</span>
+                    <span id="saved-count" class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-bold border border-slate-200">0 Saved</span>
                 </div>
                 <p class="text-xs text-slate-500 mb-4 leading-relaxed">
-                    Click any banner to load trip details into the editor. Select 2 or more checkboxes to compare side-by-side.
+                    Click any banner to load trip details into the editor. Select 2 to 5 checkboxes to compare side-by-side.
                 </p>
                 
                 <div id="history-list" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
@@ -676,7 +676,7 @@
             const count = checkboxes.length;
             compareBtn.textContent = `⚖️ Compare Selected (${count})`;
 
-            if (count >= 2) {
+            if (count >= 2 && count <= 5) {
                 compareBtn.disabled = false;
                 compareBtn.className = "w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-sm";
             } else {
@@ -685,9 +685,19 @@
             }
         }
 
+        window.handleCheckboxClick = function(checkbox, event) {
+            if (event) event.stopPropagation();
+            const checkedBoxes = document.querySelectorAll('.compare-checkbox:checked');
+            if (checkedBoxes.length > 5) {
+                checkbox.checked = false;
+                showToast('Select up to 5 trips for comparison', '⚠️');
+            }
+            updateCompareButtonState();
+        };
+
         function renderHistory() {
             const history = getHistory();
-            savedCountEl.textContent = `${history.length} / 5`;
+            savedCountEl.textContent = `${history.length} Saved`;
 
             if (history.length === 0) {
                 historyListEl.innerHTML = `
@@ -703,7 +713,7 @@
             historyListEl.innerHTML = history.map(item => `
                 <div class="group relative bg-slate-50 hover:bg-sky-50/40 border border-slate-200 hover:border-sky-300 rounded-2xl p-3.5 transition-all shadow-sm flex items-center justify-between gap-3 cursor-pointer" onclick="loadCalculation('${item.id}')">
                     <div class="flex items-center gap-3 overflow-hidden">
-                        <input type="checkbox" data-id="${item.id}" class="compare-checkbox w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500 cursor-pointer transition" onclick="event.stopPropagation(); updateCompareButtonState()">
+                        <input type="checkbox" data-id="${item.id}" class="compare-checkbox w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500 cursor-pointer transition" onclick="handleCheckboxClick(this, event)">
                         <div class="truncate">
                             <h4 class="font-bold text-slate-800 text-sm truncate group-hover:text-sky-800 transition">${escapeHtml(item.resort)}</h4>
                             <div class="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
@@ -726,10 +736,6 @@
             currentData.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
 
             let history = getHistory();
-            if (history.length >= 5) {
-                history.pop();
-            }
-
             history.unshift(currentData);
             saveHistory(history);
             renderHistory();
